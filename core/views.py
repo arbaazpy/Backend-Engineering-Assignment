@@ -10,8 +10,16 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .models import User, Organization, Cluster, Deployment
-from .serializers import OrganizationSerializer, ClusterSerializer, DeploymentSerializer, UserRegistrationSerializer, LoginSerializer, InviteCodeSerializer
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
+from .serializers import (
+    OrganizationSerializer,
+    ClusterSerializer,
+    DeploymentSerializer,
+    UserRegistrationSerializer,
+    LoginSerializer,
+    InviteCodeSerializer,
+    ValidateRefreshTokenSerializer
+)
+from drf_spectacular.utils import extend_schema
 from .tasks import schedule_deployment
 
 
@@ -75,12 +83,10 @@ class UserLoginAPIView(APIView):
         return Response({"detail": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# User Logout API (Invalidate Refresh Token)
 class UserLogoutAPIView(APIView):
     """
-    API endpoint for logging out the user by invalidating their refresh token 
-    (optional step for extra security). The refresh token can be blacklisted 
-    to prevent further use.
+    API endpoint for logging out the user by invalidating their refresh token.
+    Ensures the token is blacklisted to prevent further use.
 
     Permission: IsAuthenticated (requires user to be authenticated)
 
@@ -89,38 +95,24 @@ class UserLogoutAPIView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @extend_schema(
-        request=OpenApiParameter(
-            name='refresh_token',
-            type=str,
-            location=OpenApiParameter.QUERY,
-            description="The refresh token to invalidate the session.",
-        )
-    )
+    @extend_schema(request=ValidateRefreshTokenSerializer)
     def post(self, request, *args, **kwargs):
         """
         Handles the POST request to log the user out by invalidating their refresh token.
 
-        This method blacklists the refresh token to prevent further usage and 
-        returns a success message.
+        Blacklists the refresh token and prevents further usage.
         """
         try:
-            # Extract the refresh token
-            refresh_token = request.data.get('refresh', None)
-            
+            refresh_token = request.data.get("refresh")
             if not refresh_token:
                 return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Decode the refresh token
+            # Decode and blacklist the refresh token
             token = RefreshToken(refresh_token)
-            
-            # Add the refresh token to the blacklist
-            BlacklistedToken.objects.create(token=token)
-            
+            token.blacklist()
             return Response({"detail": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
-        
         except TokenError as e:
-            return Response({"detail": f"Logout failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail": f"An error occurred: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 

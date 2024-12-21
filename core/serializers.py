@@ -149,3 +149,13 @@ class InviteCodeSerializer(serializers.Serializer):
         invite_code: The invite code used to join an organization.
     """
     invite_code = serializers.CharField()
+
+
+class ValidateRefreshTokenSerializer(serializers.Serializer):
+    """
+    Serializer for validating the access token for logout view.
+    
+    Fields:
+        access: access token obtained after logging in.
+    """
+    refresh = serializers.CharField()

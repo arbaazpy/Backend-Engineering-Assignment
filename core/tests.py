@@ -55,21 +55,41 @@ class UserLoginAPIViewTest(APITestCase):
 
 class UserLogoutAPIViewTest(APITestCase):
     def setUp(self):
-        """Set up a test user and authenticate for logout tests."""
+        """Set up a test user and generate tokens for authentication."""
         self.user = get_user_model().objects.create_user(
             username='testuser',
             email='testuser@example.com',
             password='testpassword123'
         )
         self.refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        self.access_token = str(self.refresh.access_token)
+        self.refresh_token = str(self.refresh)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token}')
+        self.logout_url = '/api/v1/auth/logout/'
 
-    def test_user_logout(self):
-        """Test user logout functionality."""
-        url = '/api/v1/auth/logout/'
-        response = self.client.post(url)
+    def test_user_logout_success(self):
+        """Test successful user logout and refresh token blacklisting."""
+        response = self.client.post(self.logout_url, {"refresh": self.refresh_token})
         self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
         self.assertEqual(response.data['detail'], 'Successfully logged out.')
+
+        # Ensure the token is blacklisted
+        response = self.client.post('/api/token/refresh/', {"refresh": self.refresh_token})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("Token is blacklisted", response.data.get('detail', ''))
+
+    def test_logout_without_refresh_token(self):
+        """Test logout attempt without providing a refresh token."""
+        response = self.client.post(self.logout_url, {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['detail'], 'Refresh token is required.')
+
+    def test_logout_with_invalid_refresh_token(self):
+        """Test logout attempt with an invalid refresh token."""
+        invalid_refresh = "invalid_token"
+        response = self.client.post(self.logout_url, {"refresh": invalid_refresh})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Token is invalid or expired", response.data['detail'])
 
 
 class OrganizationViewSetTest(APITestCase):
