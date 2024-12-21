@@ -94,6 +94,11 @@ DATABASES = {
     }
 }
 
+DATABASES = {
+    # The db() method is an alias for db_url().
+    'default': env.db(),
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
