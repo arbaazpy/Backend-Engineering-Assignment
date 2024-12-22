@@ -68,12 +68,17 @@ $ python manage.py migrate
 ```
 
 #### 6. Create a Superuser
-To access the Django Admin interface:
+To access the Django Admin interface, you can use the custom superuser management command:
+
+```bash
+$ python manage.py create_superuser --username admin --email admin@example.com --password mysecurepassword
+```
+Alternatively, use the default command:
+
 ```bash
 $ python manage.py createsuperuser
 ```
 Follow the prompts to set up the admin credentials.
-
 
 #### 7. Run the Development Server
 ```bash
@@ -81,7 +86,6 @@ $ python manage.py runserver
 ```
 
 The server will start at `http://127.0.0.1:8000/`.
-
 
 #### 8. Access the Admin Interface
 Visit the Django admin interface:
@@ -145,3 +149,11 @@ The API documentation is available at:
 ## Notes
 - Ensure the database is running before starting the project.
 - Use `DEBUG=False` in production environments.
+
+---
+
+## Next Steps
+
+1. Implement a task to periodically check clusters for allocated resources and handle reallocation or deallocation as needed. (we can use Celery Beat for Periodic Task Scheduling)
+2. Finalize the preemption-based scheduling algorithm.
+3. Implement detailed deployment status tracking.
