@@ -67,12 +67,45 @@ $ python manage.py makemigrations
 $ python manage.py migrate
 ```
 
-#### 6. Run the Development Server
+#### 6. Create a Superuser
+To access the Django Admin interface:
+```bash
+$ python manage.py createsuperuser
+```
+Follow the prompts to set up the admin credentials.
+
+
+#### 7. Run the Development Server
 ```bash
 $ python manage.py runserver
 ```
 
 The server will start at `http://127.0.0.1:8000/`.
+
+
+#### 8. Access the Admin Interface
+Visit the Django admin interface:
+```bash
+$ http://127.0.0.1:8000/admin/
+```
+
+The server will start at `http://127.0.0.1:8000/`.
+
+---
+
+## Running Celery
+
+### Start Redis Server
+Ensure Redis is running as the Celery broker:
+```bash
+$ redis-server
+```
+
+### Run Celery Worker
+Start the Celery worker:
+```bash
+$ celery -A hypervisor_mlops worker --loglevel=info
+```
 
 ---
 
