@@ -111,7 +111,6 @@ class OrganizationViewSetTest(APITestCase):
         url = '/api/v1/organizations/'
         data = {
             "name": "New Organization",
-            "invite_code": "XYZ456"
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

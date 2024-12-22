@@ -40,7 +40,7 @@ class Organization(models.Model):
         users: Many-to-many relationship with the User model, representing the users belonging to the organization.
     """
     name = models.CharField(max_length=255)
-    invite_code = models.CharField(max_length=10, unique=True)
+    invite_code = models.CharField(max_length=10, unique=True, blank=True)
     users = models.ManyToManyField(User, blank=True)
 
     def __str__(self):
@@ -118,6 +118,14 @@ class Deployment(models.Model):
     cpu_required = models.FloatField()
     ram_required = models.FloatField()
     gpu_required = models.FloatField()
+
+    dependencies = models.ManyToManyField('self', blank=True)
+
+    def are_dependencies_completed(self):
+        """
+        Check if all dependencies are completed.
+        """
+        return all(dep.status == 'COMPLETED' for dep in self.dependencies.all())
 
     def __str__(self):
         return self.name

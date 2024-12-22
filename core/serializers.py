@@ -93,6 +93,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         users: List of users associated with the organization.
     """
     users = UserSerializer(many=True, read_only=True)
+    invite_code = serializers.CharField(read_only=True)
 
     class Meta:
         model = Organization
