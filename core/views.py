@@ -4,10 +4,10 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from .models import User, Organization, Cluster, Deployment
 from .serializers import (
@@ -35,7 +35,8 @@ class UserRegistrationAPIView(APIView):
         post: Creates a new user with the provided registration data.
     """
     permission_classes = [permissions.AllowAny]
-    
+    throttle_classes = [AnonRateThrottle]
+
     @extend_schema(request=UserRegistrationSerializer)
     def post(self, request, *args, **kwargs):
         """
@@ -66,6 +67,7 @@ class UserLoginAPIView(APIView):
         post: Authenticates the user and returns access and refresh JWT tokens.
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AnonRateThrottle]
 
     @extend_schema(request=LoginSerializer)
     def post(self, request, *args, **kwargs):
@@ -128,6 +130,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     """
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+    throttle_classes = [UserRateThrottle]
 
     @extend_schema(request=InviteCodeSerializer)
     @action(detail=True, methods=['post'])
@@ -163,6 +166,7 @@ class ClusterViewSet(viewsets.ModelViewSet):
     """
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
+    throttle_classes = [UserRateThrottle]
 
 
 class DeploymentViewSet(viewsets.ModelViewSet):
@@ -177,6 +181,7 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     queryset = Deployment.objects.all()
     serializer_class = DeploymentSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [UserRateThrottle]
 
     def create(self, request, *args, **kwargs):
         """
